@@ -10,7 +10,7 @@ import {
   Col,
   Space,
 } from "antd";
-import { addSavings, getSavings } from "../firebase";
+import { addSavings, getSavings,auth } from "../firebase";
 import { DeleteOutlined } from "@ant-design/icons";
 import { useDispatch } from "react-redux";
 
@@ -29,7 +29,8 @@ const Savings = () => {
   useEffect(() => {
     const fetchSavingsData = async () => {
       try {
-        const savingsFromFirestore = await getSavings();
+        const currentUser = auth.currentUser;
+        const savingsFromFirestore = await getSavings(currentUser.uid);
         const mappedData = savingsFromFirestore.map((doc) => {
           return {
             key: doc.id,
@@ -46,27 +47,36 @@ const Savings = () => {
     fetchSavingsData();
   }, []);
 
+  
   const handleSavingsSubmit = async () => {
-    const amount = parseFloat(savingsData.amount);
-    const savingDocument = {
-      amount: amount,
-      date: savingsData.date ? new Date(savingsData.date).toISOString() : null,
-    };
-    await addSavings(savingDocument);
-
-    const updatedSavingData = await getSavings();
-
-    // Map the data for table display
-    const mappedData = updatedSavingData.map((doc) => ({
-      key: doc.id,
-      amount: doc.amount,
-      date: doc.date instanceof Date ? doc.date.toISOString() : doc.date,
-    }));
-
-    // Update the table data
-    setTableData(mappedData);
+    try {
+      const amount = parseFloat(savingsData.amount);
+      const savingDocument = {
+        amount: amount,
+        date: savingsData.date ? new Date(savingsData.date).toISOString() : null,
+      };
+  
+      await addSavings(savingDocument);
+      const currentUser = auth.currentUser;
+      // Fetch updated savings data after submission for the current user
+      const updatedSavingsData = await getSavings(currentUser.uid);
+  
+      // Log the fetched data to inspect it
+      console.log("Fetched Savings Data:", updatedSavingsData);
+  
+      // Map the data for table display
+      const mappedData = updatedSavingsData.map((doc) => ({
+        key: doc.id,
+        amount: doc.amount,
+        date: doc.date instanceof Date ? doc.date.toISOString() : doc.date,
+      }));
+  
+      // Update the table data
+      setTableData(mappedData);
+    } catch (error) {
+      console.error("Error adding savings to Firestore:", error.message);
+    }
   };
-
   const handleDelete = async (record) => {
     try {
       if (!record || !record.key) {

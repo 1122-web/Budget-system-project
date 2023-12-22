@@ -10,7 +10,7 @@ import {
   Col,
   Space,
 } from "antd";
-import { addExpense, getExpenses, deleteExpenseRecord } from "../firebase";
+import { addExpense, getExpenses, deleteExpenseRecord ,auth} from "../firebase";
 import { toast, ToastContainer } from "react-toastify";
 import { DeleteOutlined } from "@ant-design/icons";
 import { useDispatch } from "react-redux";
@@ -28,7 +28,8 @@ const Expense = () => {
   useEffect(() => {
     const fetchExpenseData = async () => {
       try {
-        const expensesFromFirestore = await getExpenses();
+        const currentUser = auth.currentUser;
+        const expensesFromFirestore = await getExpenses(currentUser.uid);
         console.log("Fetched expenseeeee data:", expensesFromFirestore);
         const mappedData = expensesFromFirestore.map((doc) => {
           return {
@@ -47,22 +48,51 @@ const Expense = () => {
     fetchExpenseData();
   }, []);
 
+  // const handleExpenseSubmit = async () => {
+  //   try {
+  //     const expenseDocument = {
+  //       amount: expenseData.amount,
+
+  //       date: new Date(expenseData.date).toISOString(),
+  //     };
+  //     console.log("Expense Document:", expenseDocument);
+  //     await addExpense(expenseDocument);
+
+  //     // Fetch updated data after submission
+  //     const updatedExpenseData = await getExpenses();
+  //     console.log("Firestore Data After Adding Expense:", await getExpenses());
+  //     // Log the fetched data to inspect it
+  //     console.log("Fetched Expense Data:", updatedExpenseData);
+
+  //     const mappedData = updatedExpenseData.map((doc) => {
+  //       return {
+  //         key: doc.id,
+  //         amount: doc.amount,
+  //         date: doc.date ? new Date(doc.date).toISOString() : undefined,
+  //       };
+  //     });
+  //     console.log("Mapped Data Before Setting Table Data:", mappedData);
+  //     // Set the table data
+  //     setTableData(mappedData);
+  //   } catch (error) {
+  //     console.error("Error adding income to Firestore:", error.message);
+  //   }
+  // };
   const handleExpenseSubmit = async () => {
     try {
       const expenseDocument = {
         amount: expenseData.amount,
-
         date: new Date(expenseData.date).toISOString(),
       };
-      console.log("Expense Document:", expenseDocument);
+  
       await addExpense(expenseDocument);
-
-      // Fetch updated data after submission
-      const updatedExpenseData = await getExpenses();
-      console.log("Firestore Data After Adding Expense:", await getExpenses());
+      const currentUser = auth.currentUser;
+      // Fetch updated data after submission for the current user
+      const updatedExpenseData = await getExpenses(currentUser.uid);
+  
       // Log the fetched data to inspect it
       console.log("Fetched Expense Data:", updatedExpenseData);
-
+  
       const mappedData = updatedExpenseData.map((doc) => {
         return {
           key: doc.id,
@@ -70,14 +100,13 @@ const Expense = () => {
           date: doc.date ? new Date(doc.date).toISOString() : undefined,
         };
       });
-      console.log("Mapped Data Before Setting Table Data:", mappedData);
+  
       // Set the table data
       setTableData(mappedData);
     } catch (error) {
-      console.error("Error adding income to Firestore:", error.message);
+      console.error("Error adding expense to Firestore:", error.message);
     }
   };
-
   const handleDelete = async (record) => {
     try {
       if (!record || !record.key) {

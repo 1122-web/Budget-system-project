@@ -13,7 +13,7 @@ import { useDispatch } from "react-redux";
 import { useState, useEffect } from "react";
 // import { updateIncomeData } from '../store/actions';
 import { connect } from "react-redux";
-import { getIncome, addIncome as addIncomeFirestore } from "../firebase"; // Import the Firestore functions
+import { getIncome, addIncome as addIncomeFirestore ,auth} from "../firebase"; // Import the Firestore functions
 import { fetchIncomeData, updateIncomeData } from "../store/action"; // Ensure correct import paths
 import { deleteIncomeRecord } from "../firebase";
 
@@ -34,7 +34,8 @@ const Income = () => {
   useEffect(() => {
     const fetchIncomeData = async () => {
       try {
-        const incomeFromFirestore = await getIncome();
+        const currentUser = auth.currentUser;
+        const incomeFromFirestore = await getIncome(currentUser.uid);
         console.log("Fetched incomeeeeee data:", incomeFromFirestore);
         const mappedData = incomeFromFirestore.map((doc) => {
           return {
@@ -53,40 +54,22 @@ const Income = () => {
 
     fetchIncomeData();
   }, []);
-  //   useEffect(() => {
-  //   const fetchIncomeDataFromRedux = async () => {
-  //     try {
-  //       // Fetch income data from Redux state
-  //       await dispatch(fetchIncomeData());
 
-  //       // Set the table data using the updated Redux state
-  //       setTableData(incomeData);
-  //     } catch (error) {
-  //       console.error('Error fetching income data from Redux:', error);
-  //     }
-  //   };
-
-  //   fetchIncomeDataFromRedux();
-  // }, [dispatch, incomeData]);
-
-  //   fetchIncomeDataFromRedux();
-  // }, [dispatch, incomeData]);
   const handleIncomeSubmit = async () => {
     try {
       const incomeDocument = {
         amount: incomeData.amount,
-
         date: new Date(incomeData.date).toISOString(),
       };
-
+  
       await addIncomeFirestore(incomeDocument);
-
-      // Fetch updated data after submission
-      const updatedIncomeData = await getIncome();
-
+      const currentUser = auth.currentUser;
+      // Fetch updated data after submission for the current user
+      const updatedIncomeData = await getIncome(currentUser.uid);
+  
       // Log the fetched data to inspect it
       console.log("Fetched Income Data:", updatedIncomeData);
-
+  
       const mappedData = updatedIncomeData.map((doc) => {
         return {
           key: doc.id,
@@ -94,13 +77,13 @@ const Income = () => {
           date: doc.date ? new Date(doc.date).toISOString() : undefined,
         };
       });
+  
       // Set the table data
       setTableData(mappedData);
     } catch (error) {
       console.error("Error adding income to Firestore:", error.message);
     }
   };
-
   const handleDelete = async (record) => {
     try {
       if (!record || !record.key) {

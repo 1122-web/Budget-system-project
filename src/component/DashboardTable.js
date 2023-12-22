@@ -6,7 +6,9 @@ import {
   fetchExpensesData,
   fetchSavingsData,
 } from "../store/action";
-import { getIncome, getTotalExpense, getTotalSavings } from "../firebase";
+import { getIncome, getTotalExpense, getTotalSavings,auth,firestore} from "../firebase";
+import { query, where, updateDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
 import { useDispatch } from "react-redux";
 
 const DashboardTable = () => {
@@ -16,29 +18,51 @@ const DashboardTable = () => {
 
   const fetchIncomeData = useCallback(async () => {
     try {
-      // Use your existing function to fetch income data from Firebase
-      const incomeFromFirestore = await getIncome();
-      setIncomeData(incomeFromFirestore);
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        if (user) {
+          getAndSetIncomeData(user.uid);
+        } else {
+          console.error("User is not signed in");
+          setIncomeData([]);
+        }
+      });
+
+      return () => unsubscribe();
     } catch (error) {
       console.error("Error fetching income data:", error);
     }
   }, []);
+
+  const getAndSetIncomeData = async (userId) => {
+    try {
+      const incomeSnapshot = await getDocs(
+        query(
+          collection(firestore, 'income'),
+          where('uid', '==', userId)
+        )
+      );
+
+      const incomeData = incomeSnapshot.docs.map((doc) => doc.data());
+      setIncomeData(incomeData);
+    } catch (error) {
+      console.error("Error fetching income data:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch income data if it's not available
         if (!incomeData.length) {
           await fetchIncomeData();
         }
 
-        // Ensure that the incomeData is available
         if (incomeData.length) {
-          // Group incomeData by month with a consistent date format
           const groupedData = incomeData.reduce((acc, entry) => {
             const monthYear = new Date(entry.date).toLocaleDateString("en-US", {
               year: "numeric",
               month: "numeric",
             });
+
             if (!acc[monthYear]) {
               acc[monthYear] = {
                 date: monthYear,
@@ -49,21 +73,14 @@ const DashboardTable = () => {
             }
 
             acc[monthYear].incomeAmount += entry.amount;
-
             return acc;
           }, {});
 
-          console.log("Grouped Data:", groupedData);
-
-          // Fetch and aggregate totalExpense and totalSavings for each month
           const combinedData = await Promise.all(
             Object.values(groupedData).map(async (record) => {
-              console.log("Fetching data for record:", record);
-
-              const totalExpense = await getTotalExpense(record.date);
-              const totalSavings = await getTotalSavings(record.date);
-
-              console.log("Fetched data for record:", record);
+              const currentUser = auth.currentUser;
+              const totalExpense = await getTotalExpense(record.date, currentUser.uid);
+              const totalSavings = await getTotalSavings(record.date, currentUser.uid);
 
               return {
                 ...record,
@@ -73,10 +90,7 @@ const DashboardTable = () => {
             })
           );
 
-          console.log("Combined Data:", combinedData);
-
           setDashboardData(combinedData);
-          // await fetchIncomeData();
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -85,6 +99,7 @@ const DashboardTable = () => {
 
     fetchData();
   }, [incomeData, fetchIncomeData]);
+
   const columns = [
     {
       title: <h3>Data</h3>,

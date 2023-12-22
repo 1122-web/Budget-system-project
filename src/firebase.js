@@ -67,17 +67,36 @@ export const addIncome = async (incomeData) => {
     throw error;
   }
 };
-export const getIncome = async () => {
-  try {
+// export const getIncome = async () => {
+//   try {
   
-    const snapshot = await getDocs(collection(firestore, 'income'));
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+//     const snapshot = await getDocs(collection(firestore, 'income'));
+//     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+//   } catch (error) {
+//     console.error('Error getting income from Firestore:', error);
+//     return [];
+//   }
+// };
+export const getIncome = async (userId) => {
+  try {
+    const incomeSnapshot = await getDocs(
+      query(
+        collection(firestore, "income"),
+        where("uid", "==", userId)
+      )
+    );
+
+    const incomeData = incomeSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return incomeData;
   } catch (error) {
-    console.error('Error getting income from Firestore:', error);
+    console.error("Error getting income data from Firestore:", error);
     return [];
   }
 };
-
 export const addExpense = async (expenseData) => {
   try {
     const { amount, date } = expenseData;
@@ -159,16 +178,35 @@ export const addExpense = async (expenseData) => {
 };
 
 // Get Expense
-export const getExpenses = async () => {
+// export const getExpenses = async () => {
+//   try {
+//     const snapshot = await getDocs(collection(firestore, 'expense'));
+//     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+//   } catch (error) {
+//     console.error('Error getting expense from Firestore:', error);
+//     return [];
+//   }
+// };
+export const getExpenses = async (userId) => {
   try {
-    const snapshot = await getDocs(collection(firestore, 'expense'));
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const expensesSnapshot = await getDocs(
+      query(
+        collection(firestore, "expense"),
+        where("uid", "==", userId)
+      )
+    );
+
+    const expensesData = expensesSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return expensesData;
   } catch (error) {
-    console.error('Error getting expense from Firestore:', error);
+    console.error("Error getting expenses data from Firestore:", error);
     return [];
   }
 };
-
 export const addSavings = async (savingsData) => {
   try {
     const { amount, date } = savingsData;
@@ -271,35 +309,62 @@ export const addSavings = async (savingsData) => {
   throw error;
 }
 };
-export const getSavings = async () => {
+
+export const getSavings = async (userId) => {
   try {
-    const snapshot = await getDocs(collection(firestore, 'savings'));
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const savingsSnapshot = await getDocs(
+      query(
+        collection(firestore, "savings"),
+        where("uid", "==", userId)
+      )
+    );
+
+    const savingsData = savingsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return savingsData;
   } catch (error) {
-    console.error('Error getting savings from Firestore:', error);
+    console.error("Error getting savings data from Firestore:", error);
     return [];
   }
 };
-export const getTotalIncome = async (date) => {
+
+export const getTotalIncome = async (date, userId) => {
   try {
-    console.log('Fetching total income for date:', date);
+    console.log('Fetching total income for date and user:', date, userId);
 
-    const incomeSnapshot = await getDocs(collection(firestore, 'income'));
+    // Split the date string into month and year
+    const [month, year] = date.split("/");
 
-    // Extract the year and month from the provided date
-    const providedYear = new Date(date).getFullYear();
-    const providedMonth = new Date(date).getMonth() + 1;
-    console.log(' inn Provided Year:', providedYear);
-    console.log('inn Provided Month:', providedMonth);
-    const totalIncome = incomeSnapshot.docs
-      .filter((doc) => {
-        const docYear = doc.data().month.year;
-        const docMonth = doc.data().month.month;
-        // Compare year and month
-        return docYear === providedYear && docMonth === providedMonth;
-      })
-      .reduce((total, doc) => total + doc.data().amount, 0);
+    // Create a new Date object with the components
+    const dateObject = new Date(`${month}/01/${year}`); // Assuming day is always 01
 
+    // Check if the dateObject is valid
+    if (isNaN(dateObject.getTime())) {
+      console.error('Invalid date format:', date);
+      return 0;
+    }
+
+    // Construct a Firestore query to get income for the specified user, year, and month
+    const incomeQuery = query(
+      collection(firestore, 'income'),
+      where('uid', '==', userId), // Adjust the field name if necessary
+      where('month.month', '==', dateObject.getMonth() + 1),
+      where('month.year', '==', dateObject.getFullYear())
+    );
+
+    // Execute the query and get the documents
+    const incomeSnapshot = await getDocs(incomeQuery);
+
+    // Calculate the total income from the documents
+    const totalIncome = incomeSnapshot.docs.reduce(
+      (total, doc) => total + doc.data().amount,
+      0
+    );
+
+    console.log('Filtered documents:', incomeSnapshot.docs.map(doc => doc.data()));
     console.log('Total Income:', totalIncome);
 
     return totalIncome;
@@ -308,89 +373,87 @@ export const getTotalIncome = async (date) => {
     return 0;
   }
 };
-
-export const getTotalExpense = async (date) => {
+export const getTotalExpense = async (date, userId) => {
   try {
-    console.log('Fetching total expense for date:', date);
+    console.log("Fetching total expense for date and user:", date, userId);
 
     // Split the date string into month and year
-    const [month, year] = date.split('/');
+    const [month, year] = date.split("/");
 
     // Create a new Date object with the components
     const dateObject = new Date(`${month}/01/${year}`); // Assuming day is always 01
 
     // Check if the dateObject is valid
     if (isNaN(dateObject.getTime())) {
-      console.error('Invalid date format:', date);
+      console.error("Invalid date format:", date);
       return 0;
     }
-    const expenseSnapshot = await getDocs(collection(firestore, 'expense'));
-    // Extract the year and month from the date object
-    const providedYear = dateObject.getFullYear();
-    const providedMonth = dateObject.getMonth() + 1;
-    // const expenseSnapshot = await getDocs(collection(firestore, 'expense'));
-    // const providedYear = new Date(date).getFullYear();
-    // const providedMonth = new Date(date).getMonth() + 1;
-    console.log('Provided Year:', providedYear);
-    console.log('Provided Month:', providedMonth);
-    const totalExpense = expenseSnapshot.docs
-      .filter((doc) => {
-        const docYear = doc.data().month.year;
-        const docMonth = doc.data().month.month;
-        // Compare year and month
-        return docYear === providedYear && docMonth === providedMonth;
-      })
-      .reduce((total, doc) => total + doc.data().amount, 0);
 
+    // Construct a Firestore query to get expenses for the specified user, year, and month
+    const expenseQuery = query(
+      collection(firestore, "expense"),
+      where("uid", "==", userId), // Adjust the field name if necessary
+      where("month.month", "==", dateObject.getMonth() + 1),
+      where("month.year", "==", dateObject.getFullYear())
+    );
 
-    console.log('Total Expense:', totalExpense);
+    // Execute the query and get the documents
+    const expenseSnapshot = await getDocs(expenseQuery);
+
+    // Calculate the total expense from the documents
+    const totalExpense = expenseSnapshot.docs.reduce(
+      (total, doc) => total + doc.data().amount,
+      0
+    );
+
+    console.log("Filtered documents:", expenseSnapshot.docs.map(doc => doc.data()));
+    console.log("Total Expense:", totalExpense);
 
     return totalExpense;
   } catch (error) {
-    console.error('Error getting total expense from Firestore:', error);
+    console.error("Error getting total expense from Firestore:", error);
     return 0;
   }
 };
-
-export const getTotalSavings = async (date) => {
+export const getTotalSavings = async (date, userId) => {
   try {
-    console.log('Fetching total expense for date:', date);
+    console.log("Fetching total savings for date and user:", date, userId);
 
     // Split the date string into month and year
-    const [month, year] = date.split('/');
+    const [month, year] = date.split("/");
 
     // Create a new Date object with the components
     const dateObject = new Date(`${month}/01/${year}`); // Assuming day is always 01
 
     // Check if the dateObject is valid
     if (isNaN(dateObject.getTime())) {
-      console.error('Invalid date format:', date);
+      console.error("Invalid date format:", date);
       return 0;
     }
-    const savingsSnapshot = await getDocs(collection(firestore, 'savings'));
-    // Extract the year and month from the date object
-    const providedYear = dateObject.getFullYear();
-    const providedMonth = dateObject.getMonth() + 1;
-    // const expenseSnapshot = await getDocs(collection(firestore, 'expense'));
-    // const providedYear = new Date(date).getFullYear();
-    // const providedMonth = new Date(date).getMonth() + 1;
-    console.log('Provided Year:', providedYear);
-    console.log('Provided Month:', providedMonth);
-    const totalSavings = savingsSnapshot.docs
-      .filter((doc) => {
-        const docYear = doc.data().month.year;
-        const docMonth = doc.data().month.month;
-        // Compare year and month
-        return docYear === providedYear && docMonth === providedMonth;
-      })
-      .reduce((total, doc) => total + doc.data().amount, 0);
 
+    // Construct a Firestore query to get savings for the specified user, year, and month
+    const savingsQuery = query(
+      collection(firestore, "savings"),
+      where("uid", "==", userId), // Adjust the field name if necessary
+      where("month.month", "==", dateObject.getMonth() + 1),
+      where("month.year", "==", dateObject.getFullYear())
+    );
 
-    // console.log('Total savings:', total);
+    // Execute the query and get the documents
+    const savingsSnapshot = await getDocs(savingsQuery);
+
+    // Calculate the total savings from the documents
+    const totalSavings = savingsSnapshot.docs.reduce(
+      (total, doc) => total + doc.data().amount,
+      0
+    );
+
+    console.log("Filtered documents:", savingsSnapshot.docs.map(doc => doc.data()));
+    console.log("Total Savings:", totalSavings);
 
     return totalSavings;
   } catch (error) {
-    console.error('Error getting total savings from Firestore:', error);
+    console.error("Error getting total savings from Firestore:", error);
     return 0;
   }
 };

@@ -67,16 +67,7 @@ export const addIncome = async (incomeData) => {
     throw error;
   }
 };
-// export const getIncome = async () => {
-//   try {
-  
-//     const snapshot = await getDocs(collection(firestore, 'income'));
-//     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-//   } catch (error) {
-//     console.error('Error getting income from Firestore:', error);
-//     return [];
-//   }
-// };
+
 export const getIncome = async (userId) => {
   try {
     const incomeSnapshot = await getDocs(
@@ -434,7 +425,9 @@ export const getTotalSavings = async (date, userId) => {
     // Construct a Firestore query to get savings for the specified user, year, and month
     const savingsQuery = query(
       collection(firestore, "savings"),
-      where("uid", "==", userId), // Adjust the field name if necessary
+      
+      where("uid", "==", userId),
+      // where('date', '==', date), // Adjust the field name if necessary
       where("month.month", "==", dateObject.getMonth() + 1),
       where("month.year", "==", dateObject.getFullYear())
     );

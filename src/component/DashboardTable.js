@@ -16,6 +16,8 @@ const DashboardTable = () => {
   const [incomeData, setIncomeData] = useState([]);
   const dispatch = useDispatch();
 
+  
+
   const fetchIncomeData = useCallback(async () => {
     try {
       const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -48,14 +50,28 @@ const DashboardTable = () => {
       console.error("Error fetching income data:", error);
     }
   };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!incomeData.length) {
-          await fetchIncomeData();
-        }
+        const currentUser = auth.currentUser;
 
+        if (currentUser) {
+          await fetchIncomeData(currentUser.uid);
+        } else {
+          console.error("User is not signed in");
+          setIncomeData([]);
+        }
+      } catch (error) {
+        console.error("Error checking user authentication:", error);
+      }
+    };
+
+    fetchData();
+  }, [fetchIncomeData]); // Include fetchIncomeData in the dependency array
+
+  useEffect(() => {
+    const processData = async () => {
+      try {
         if (incomeData.length) {
           const groupedData = incomeData.reduce((acc, entry) => {
             const monthYear = new Date(entry.date).toLocaleDateString("en-US", {
@@ -75,10 +91,9 @@ const DashboardTable = () => {
             acc[monthYear].incomeAmount += entry.amount;
             return acc;
           }, {});
-
+          const currentUser = auth.currentUser;
           const combinedData = await Promise.all(
             Object.values(groupedData).map(async (record) => {
-              const currentUser = auth.currentUser;
               const totalExpense = await getTotalExpense(record.date, currentUser.uid);
               const totalSavings = await getTotalSavings(record.date, currentUser.uid);
 
@@ -93,13 +108,12 @@ const DashboardTable = () => {
           setDashboardData(combinedData);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error processing data:", error);
       }
     };
 
-    fetchData();
+    processData();
   }, [incomeData, fetchIncomeData]);
-
   const columns = [
     {
       title: <h3>Data</h3>,

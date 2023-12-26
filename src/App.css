@@ -30,14 +30,14 @@ p {
   float: left;
 }
 #components-form-demo-normal-login .login-form-button {
-  width: 100%;
+  width: 80%;
   text-align: center;
 }
-.login-form-button {
+/* .login-form-button {
   align-items: center;
 
   align-items: center;
-}
+} */
 .heading1 {
   color: #13c2c2;
   text-align: center;
@@ -174,16 +174,28 @@ h3 {
   .budget {
     padding-left: 0;
   }
+ 
 }
 @media screen and (max-width: 425px) {
   .dashboard-wrapper-sm {
     padding: 0px !important;
     margin: 10px !important;
   }
+  
 }
 @media screen and (max-width: 425px) {
   .responsive-image {
     /* padding: 0px !important; */
     margin: 50px !important;
   }
+  .login-form-button {
+    width: 70%; /* Set the width to 100% for full-width buttons */
+    margin: 5px; /* Adjust margin as needed */
+  }
 }
+/* @media (max-width: 425px) {
+  .login-form-button {
+    width: 100%; /* Set the width to 100% for full-width buttons 
+    margin: 5px; /* Adjust margin as needed 
+  }
+} */

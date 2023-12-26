@@ -48,36 +48,6 @@ const Expense = () => {
     fetchExpenseData();
   }, []);
 
-  // const handleExpenseSubmit = async () => {
-  //   try {
-  //     const expenseDocument = {
-  //       amount: expenseData.amount,
-
-  //       date: new Date(expenseData.date).toISOString(),
-  //     };
-  //     console.log("Expense Document:", expenseDocument);
-  //     await addExpense(expenseDocument);
-
-  //     // Fetch updated data after submission
-  //     const updatedExpenseData = await getExpenses();
-  //     console.log("Firestore Data After Adding Expense:", await getExpenses());
-  //     // Log the fetched data to inspect it
-  //     console.log("Fetched Expense Data:", updatedExpenseData);
-
-  //     const mappedData = updatedExpenseData.map((doc) => {
-  //       return {
-  //         key: doc.id,
-  //         amount: doc.amount,
-  //         date: doc.date ? new Date(doc.date).toISOString() : undefined,
-  //       };
-  //     });
-  //     console.log("Mapped Data Before Setting Table Data:", mappedData);
-  //     // Set the table data
-  //     setTableData(mappedData);
-  //   } catch (error) {
-  //     console.error("Error adding income to Firestore:", error.message);
-  //   }
-  // };
   const handleExpenseSubmit = async () => {
     try {
       const expenseDocument = {

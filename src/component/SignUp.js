@@ -57,26 +57,7 @@ const SignUp = () => {
   };
   
   const handleGoogleSignUp = async () => {
-  //   try {
-  //     // Sign in with Google
-  //     const result = await signInWithPopup(auth, googleProvider);
-
-  //     // Access the user information from the result
-  //     const user = result.user;
-
-  //     // You can access user.email, user.displayName, etc.
-  //     console.log('Google Sign-Up Successful:', user);
-
-  //     // Redirect or perform additional actions as needed
-  //     navigate('/dashboardTable');
-  //   } catch (error) {
-  //     console.error('Error signing up with Google:', error.message);
-  //   }
-  // };
-
-  // const onFinish = (values) => {
-  //   console.log('Received values of form: ', values);
-  // };
+ 
  
     try {
       // Sign in with Google
@@ -169,7 +150,7 @@ const SignUp = () => {
                 type="primary"
                 htmlType="submit"
                 className="login-form-button"
-                style={{ width: '30%', margin: '5px' }}
+                style={{  margin: '5px' }}
                 onClick={createUser }
               >
                 Sign Up
@@ -178,10 +159,10 @@ const SignUp = () => {
                 type="primary"
                 className="login-form-button"
                 icon={<GoogleOutlined />}
-                style={{ width: '30%', margin: '5px' }}
+                style={{ margin: '5px' }}
                 onClick={handleGoogleSignUp}
               >
-                Sign Up with Google
+                Continue with Google
               </Button>
             </Form.Item>
 
@@ -201,88 +182,3 @@ const SignUp = () => {
 };
 
 export default SignUp;
-
-//   return (
-//     <>
-//       <div className='signup-card' style={{ textAlign: 'center' }}>
-//         <Card
-//           title="Create Account"
-//           bordered={false}
-//           style={{
-//             width: 600, margin: '10em',
-//           }}
-//         >
-//           <Form
-//             name="normal_login"
-//             className="login-form"
-//             initialValues={{
-//               remember: true,
-//             }}
-//             onFinish={onFinish}
-//           >
-//             <Form.Item
-//               name="email"
-//               rules={[
-//                 {
-//                   required: true,
-//                   message: 'Please input your email!',
-//                 },
-//               ]}
-//             >
-//               <Input
-//                 prefix={<MailOutlined  className="site-form-item-icon" />}
-//                 type="email"
-//                 placeholder="email"
-//                 value={email}
-//                 onChange={(e) => setEmail(e.target.value)}
-//               />
-//             </Form.Item>
-
-// <Form.Item
-//   name="password"
-//   rules={[
-//     {
-//       required: true,
-//       message: 'Please input your Password!',
-//     },
-//   ]}
-// >
-//   <Input.Password
-//     prefix={<LockOutlined className="site-form-item-icon" />}
-//     placeholder="Password"
-//     onChange={(e) => setPassword(e.target.value)}
-//     value={password}
-//     iconRender={visible => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)} // This line adds the eye icon
-//   />
-// </Form.Item>
-
-//             <Form.Item >
-//               <Button type="primary" htmlType="submit" className="login-form-button" onClick={createUser }  
-//               style={{width:'30%', margin: '5px ',  }} >
-          
-//                 Sign Up
-//               </Button>
-//               <Button type="primary"
-//         className="login-form-button" 
-//           icon={<GoogleOutlined />}
-//           onClick={handleGoogleSignUp}
-//         >
-//           Sign Up with Google
-//         </Button>
-//             </Form.Item> <Form.Item>
-//         <p  style={{ marginTop:'1px'  }}>Already have an Account? <Link to="/Signin">Signin Here</Link></p>
-//         </Form.Item> <Form.Item>
-              
-
-//             <Link to="/Forgetpassword" >Forgot Password</Link>
-//             </Form.Item>
-            
-//           </Form>
-//         </Card>
-//         <ToastContainer />
-//       </div>
-//     </>
-//   );
-// };
-
-// export default SignUp;
